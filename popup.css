@@ -1355,3 +1355,74 @@ input:checked + .slider:before {
     background: var(--bg-card);
   }
 }
+
+/* Immersive Fullscreen Cover Art Mode */
+.player-card .immersive-toggle-btn {
+  display: none;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  color: var(--text-sub);
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.2s ease;
+}
+
+.player-card .immersive-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  transform: scale(1.08);
+}
+
+.player-card.expanded .immersive-toggle-btn {
+  display: flex;
+}
+
+.player-card.expanded.immersive-art .album-art-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  z-index: 0;
+}
+
+.player-card.expanded.immersive-art .album-art-wrapper img {
+  border-radius: 0;
+  filter: blur(3px); /* Subtle blur to blend background cover art */
+  transform: scale(1.05); /* Avoid white edges */
+}
+
+.player-card.expanded.immersive-art .album-art-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(8, 8, 12, 0.1) 0%, rgba(8, 8, 12, 0.45) 35%, rgba(8, 8, 12, 0.88) 80%, rgba(8, 8, 12, 1) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.player-card.expanded.immersive-art .card-content {
+  position: relative;
+  z-index: 2;
+  margin-top: 50px;
+  margin-bottom: 20px;
+}
+
+.player-card.expanded.immersive-art .progress-container {
+  position: relative;
+  z-index: 2;
+}

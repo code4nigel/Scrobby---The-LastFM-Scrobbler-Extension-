@@ -80,9 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Preference Settings elements
   const settingNowPlayingToggle = document.getElementById('setting-nowplaying-toggle');
+  const settingImmersiveToggle = document.getElementById('setting-immersive-toggle');
   const settingMinDuration = document.getElementById('setting-minduration');
   const settingScrobbleMode = document.getElementById('setting-scrobblepoint-mode');
   const settingScrobbleVal = document.getElementById('setting-scrobblepoint-val');
+  const immersiveArtToggleBtn = document.getElementById('immersive-art-toggle-btn');
   
   // Profile settings
   const dashboardProfileName = document.getElementById('dashboard-profile-name');
@@ -324,6 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadScrobblePreferences() {
     const prefs = await chrome.storage.local.get([
       'submit_now_playing',
+      'immersive_art',
       'min_duration',
       'scrobble_mode',
       'scrobble_percent',
@@ -331,6 +334,16 @@ document.addEventListener('DOMContentLoaded', () => {
     ]);
 
     settingNowPlayingToggle.checked = prefs.submit_now_playing !== false;
+    
+    // Default immersive_art to true for out-of-the-box premium immersive look
+    const isImmersive = prefs.immersive_art !== false;
+    settingImmersiveToggle.checked = isImmersive;
+    if (isImmersive) {
+      playerCard.classList.add('immersive-art');
+    } else {
+      playerCard.classList.remove('immersive-art');
+    }
+    
     settingMinDuration.value = prefs.min_duration || 30;
     
     const mode = prefs.scrobble_mode || 'percent';
@@ -352,6 +365,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Bind save listeners to preferences
   settingNowPlayingToggle.addEventListener('change', async () => {
     await chrome.storage.local.set({ submit_now_playing: settingNowPlayingToggle.checked });
+  });
+
+  settingImmersiveToggle.addEventListener('change', async () => {
+    const isChecked = settingImmersiveToggle.checked;
+    await chrome.storage.local.set({ immersive_art: isChecked });
+    if (isChecked) {
+      playerCard.classList.add('immersive-art');
+    } else {
+      playerCard.classList.remove('immersive-art');
+    }
   });
 
   settingMinDuration.addEventListener('input', async () => {
@@ -688,11 +711,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isExpanded) {
       playerCard.classList.remove('expanded');
       document.getElementById('minimize-player-btn').style.display = 'none';
+      document.getElementById('immersive-art-toggle-btn').style.display = 'none';
       document.querySelector('.app-container').classList.remove('player-expanded');
       renderRecentTracks();
     } else {
       playerCard.classList.add('expanded');
       document.getElementById('minimize-player-btn').style.display = 'flex';
+      document.getElementById('immersive-art-toggle-btn').style.display = 'flex';
       document.querySelector('.app-container').classList.add('player-expanded');
       renderRecentTracks();
     }
@@ -704,8 +729,15 @@ document.addEventListener('DOMContentLoaded', () => {
     e.stopPropagation(); // prevent parent playerCard click event
     playerCard.classList.remove('expanded');
     minimizeBtn.style.display = 'none';
+    document.getElementById('immersive-art-toggle-btn').style.display = 'none';
     document.querySelector('.app-container').classList.remove('player-expanded');
     renderRecentTracks();
+  });
+
+  // Handle immersive art toggle button click
+  immersiveArtToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // prevent parent playerCard click event
+    playerCard.classList.toggle('immersive-art');
   });
 
   // --- Initial Page Loading Procedures ---
