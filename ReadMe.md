@@ -22,6 +22,17 @@ Here are the real screenshots of **Scrobby** in action, showcasing its glassmorp
 |:---:|:---:|:---:|
 | <img src="UI/Site_settings.png" width="220" /> | <img src="UI/Overall_settings.png" width="220" /> | <img src="UI/MiniPlayer_scrobbleList.png" width="220" /> |
 
+
+---
+
+## 🎥 Visual Demonstrations
+
+Here is a side-by-side comparison demonstrating the difference between the standard centered player layout and the new fluid immersive background layout:
+
+| Fullscreen Player (Centered Layout) | Fullscreen Player (Immersive Layout) |
+|:---:|:---:|
+| <img src="UI/demo_fullscreen_normal.png" width="340" /> | <img src="UI/demo_fullscreen_immersive_demonstration.png" width="340" /> |
+
 ---
 
 ## ✨ Features
