@@ -6,6 +6,10 @@
 
 import { md5 } from './md5.js';
 
+// Default Last.fm API credentials to ensure a seamless zero-configuration experience
+const DEFAULT_API_KEY = 'f8409386dcfd73d2ff6db6f89093b137';
+const DEFAULT_SHARED_SECRET = '87a9cc5c3b9b4b3b2c286db50239cf3d';
+
 // Currently active song state
 let currentSong = {
   title: '',
@@ -27,13 +31,14 @@ let currentSong = {
 async function updateBadge() {
   try {
     const creds = await chrome.storage.local.get(['api_key', 'session_key']);
-    if (!creds.api_key || !creds.session_key) {
+    const apiKey = creds.api_key || DEFAULT_API_KEY;
+    if (!apiKey || !creds.session_key) {
       chrome.action.setBadgeText({ text: '!' });
       chrome.action.setBadgeBackgroundColor({ color: '#d51007' }); // Last.fm Red
       chrome.action.setTitle({ title: 'Setup Last.fm Credentials' });
     } else {
       chrome.action.setBadgeText({ text: '' });
-      chrome.action.setTitle({ title: 'YTM Last.fm Scrobbler Active' });
+      chrome.action.setTitle({ title: 'Scrobby Active' });
     }
   } catch (err) {
     console.error('Error updating badge:', err);
@@ -55,8 +60,8 @@ function generateSignature(params, secret) {
 // Global API Caller helper for Last.fm
 async function callLastFm(method, params, requiresAuth = true) {
   const creds = await chrome.storage.local.get(['api_key', 'shared_secret', 'session_key']);
-  const apiKey = creds.api_key;
-  const secret = creds.shared_secret;
+  const apiKey = creds.api_key || DEFAULT_API_KEY;
+  const secret = creds.shared_secret || DEFAULT_SHARED_SECRET;
   const sessionKey = creds.session_key;
 
   if (!apiKey) {
