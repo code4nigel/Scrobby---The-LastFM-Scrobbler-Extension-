@@ -20,7 +20,7 @@ Here are the real screenshots of **Scrobby** in action, showcasing its glassmorp
 
 | Site Permissions Settings | Scrobbling Preferences | Mini Player Scrobbles List |
 |:---:|:---:|:---:|
-| <img src="UI/Site_settings.png" width="220" /> | <img src="UI/Overall_settings.png" width="220" /> | <img src="UI/mini%20player%20scrobble%20list.png" width="220" /> |
+| <img src="UI/Site_settings.png" width="220" /> | <img src="UI/Overall_settings.png" width="220" /> | <img src="UI/MiniPlayer_scrobbleList.png" width="220" /> |
 
 ---
 
