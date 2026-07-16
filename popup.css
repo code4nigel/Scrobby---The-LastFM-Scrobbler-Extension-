@@ -843,6 +843,16 @@ input:checked + .slider:before {
 
 .player-card.expanded .minimize-btn {
   display: flex;
+  top: 64px; /* Pull down from off-screen top edge */
+  left: 12px;
+  right: auto;
+}
+
+.player-card.expanded .immersive-toggle-btn {
+  display: flex;
+  top: 64px; /* Pull down from off-screen top edge */
+  right: 12px;
+  left: auto;
 }
 
 .app-container.player-expanded .card-bg-blur {
@@ -859,18 +869,29 @@ input:checked + .slider:before {
   margin-bottom: 24px;
   margin-top: 16px;
   width: 100%;
+  position: relative;
+  transition: margin-top 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .player-card.expanded .album-art-wrapper {
+  position: relative;
   width: 170px;
   height: 170px;
   border-radius: 12px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  z-index: 1;
+  transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1), height 0.4s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.4s ease, box-shadow 0.4s ease, top 0.4s cubic-bezier(0.25, 1, 0.5, 1), left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.player-card.expanded .album-art-wrapper img {
+  border-radius: 12px;
+  transition: border-radius 0.4s ease, filter 0.4s ease;
 }
 
 .player-card.expanded .track-details {
   width: 100%;
   text-align: center;
+  z-index: 2;
 }
 
 .player-card.expanded .scrolling-text-container {
@@ -1362,35 +1383,43 @@ input:checked + .slider:before {
   position: absolute;
   right: 12px;
   top: 12px;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 50%;
   color: var(--text-sub);
   cursor: pointer;
-  z-index: 100;
-  transition: all 0.2s ease;
+  z-index: 101;
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .player-card .immersive-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.16);
   color: var(--text-main);
-  transform: scale(1.08);
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
 }
 
-.player-card.expanded .immersive-toggle-btn {
-  display: flex;
+/* Toggle SVG icon states depending on active class */
+.player-card.immersive-art .immersive-toggle-btn .icon-expand {
+  display: none !important;
 }
 
+.player-card.immersive-art .immersive-toggle-btn .icon-shrink {
+  display: block !important;
+}
+
+/* Immersive cover art layout overrides */
 .player-card.expanded.immersive-art .album-art-wrapper {
-  position: absolute;
-  top: 0;
+  position: absolute; /* Detach in immersive mode to overlay full background */
+  top: 0; /* Cover the card exactly */
   left: 0;
+  transform: none;
   width: 100% !important;
-  height: 100% !important;
+  height: 100% !important; /* Full card height */
   border-radius: 0;
   box-shadow: none;
   border: none;
@@ -1399,8 +1428,7 @@ input:checked + .slider:before {
 
 .player-card.expanded.immersive-art .album-art-wrapper img {
   border-radius: 0;
-  filter: blur(3px); /* Subtle blur to blend background cover art */
-  transform: scale(1.05); /* Avoid white edges */
+  filter: none !important; /* Keep artwork completely sharp like official YTM */
 }
 
 .player-card.expanded.immersive-art .album-art-wrapper::after {
@@ -1410,19 +1438,197 @@ input:checked + .slider:before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(8, 8, 12, 0.1) 0%, rgba(8, 8, 12, 0.45) 35%, rgba(8, 8, 12, 0.88) 80%, rgba(8, 8, 12, 1) 100%);
+  /* Softer bottom gradient fade to let the artwork be visible in the upper-middle region and only dark at the timeline/badge */
+  background: linear-gradient(to bottom, rgba(8, 8, 12, 0) 0%, rgba(8, 8, 12, 0) 45%, rgba(8, 8, 12, 0.6) 75%, rgba(8, 8, 12, 0.95) 100%);
   z-index: 1;
   pointer-events: none;
 }
 
+/* Pull text details margin up slightly in immersive mode to keep layout centered */
 .player-card.expanded.immersive-art .card-content {
+  position: static; /* Let absolute album-art-wrapper resolve relative to player-card */
+  margin-top: 180px; /* Push the text down to align beautifully */
+}
+
+.player-card.expanded.immersive-art .track-details {
   position: relative;
+  width: 100%;
+  text-align: center;
   z-index: 2;
-  margin-top: 50px;
-  margin-bottom: 20px;
 }
 
 .player-card.expanded.immersive-art .progress-container {
   position: relative;
   z-index: 2;
+  margin-top: 6px;
+}
+
+/* Developer Profile Section */
+.dev-card {
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dev-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dev-avatar-wrapper {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dev-avatar-container {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--lfm-red);
+  box-shadow: 0 0 12px var(--lfm-red-glow);
+  animation: devFloat 3.5s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dev-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.dev-avatar-container .emoji {
+  position: absolute;
+  font-size: 11px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.dev-avatar-container .emoji-1 { animation: emojiFlow1 4s ease-in-out infinite; top: 10%; left: 10%; }
+.dev-avatar-container .emoji-2 { animation: emojiFlow2 4.5s ease-in-out infinite 0.8s; top: 5%; right: 5%; }
+.dev-avatar-container .emoji-3 { animation: emojiFlow3 3.8s ease-in-out infinite 1.6s; bottom: 10%; left: 5%; }
+.dev-avatar-container .emoji-4 { animation: emojiFlow4 4.2s ease-in-out infinite 1.2s; bottom: 5%; right: 10%; }
+.dev-avatar-container .emoji-5 { animation: emojiFlow1 4.7s ease-in-out infinite 2s; top: -15%; left: 35%; }
+
+@keyframes devFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.03); }
+}
+
+@keyframes emojiFlow1 {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  25% { opacity: 0.9; }
+  100% { transform: translate(-22px, -30px) scale(1.1) rotate(-15deg); opacity: 0; }
+}
+@keyframes emojiFlow2 {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  25% { opacity: 0.9; }
+  100% { transform: translate(22px, -26px) scale(1.1) rotate(20deg); opacity: 0; }
+}
+@keyframes emojiFlow3 {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  25% { opacity: 0.9; }
+  100% { transform: translate(-24px, 22px) scale(1.1) rotate(-10deg); opacity: 0; }
+}
+@keyframes emojiFlow4 {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  25% { opacity: 0.9; }
+  100% { transform: translate(20px, 24px) scale(1.1) rotate(15deg); opacity: 0; }
+}
+
+.dev-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dev-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.dev-title {
+  font-size: 11px;
+  color: var(--text-sub);
+}
+
+.dev-github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--lfm-red);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.dev-github-link:hover {
+  text-decoration: underline;
+  text-shadow: 0 0 6px var(--lfm-red-glow);
+}
+
+.dev-divider {
+  height: 1px;
+  background: var(--border-light);
+  width: 100%;
+}
+
+.dev-interactive-facts {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--border-light);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  text-align: center;
+  user-select: none;
+}
+
+.dev-interactive-facts:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--lfm-red);
+  transform: translateY(-2px);
+}
+
+.dev-interactive-facts:active {
+  transform: scale(0.98);
+}
+
+.dev-interactive-facts .fact-intro {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-sub);
+  margin-bottom: 4px;
+  transition: color 0.2s ease;
+}
+
+.dev-interactive-facts:hover .fact-intro {
+  color: var(--lfm-red);
+}
+
+.dev-interactive-facts .fact-text {
+  font-size: 12px;
+  color: var(--text-main);
+  line-height: 1.4;
+  margin: 0;
+  transition: all 0.25s ease;
 }
