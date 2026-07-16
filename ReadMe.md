@@ -10,9 +10,17 @@ It features a stunning glassmorphic dark interface, dynamic liquid tab transitio
 
 ---
 
-## 📸 Interface Preview
+## 📸 Interface Screenshots
 
-![Scrobby UI Preview](images/preview.png)
+Here are the real screenshots of **Scrobby** in action, showcasing its glassmorphic dark theme and layouts:
+
+| Main Player (Expanded) | Sites Settings | Advanced Settings |
+|:---:|:---:|:---:|
+| <img src="UI/Main%20player.png" width="220" /> | <img src="UI/Main%20player%20Site%20.png" width="220" /> | <img src="UI/Main%20player%20Settng%20image.png" width="220" /> |
+
+| Mini Player View | Mini Player Scrobbles List | Horizontal Queue (Expanded) |
+|:---:|:---:|:---:|
+| <img src="UI/mini%20Player%20image.png" width="220" /> | <img src="UI/mini%20player%20scrobble%20list.png" width="220" /> | <img src="UI/Main%20player%20recent%20scrobble%20iamges.png" width="220" /> |
 
 ---
 
