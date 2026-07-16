@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YTM Last.fm Scrobbler</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="card-bg-blur" id="player-bg-blur"></div>
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon"></div>
+        <span class="logo-text">Scrobby</span>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="app-body">
+      
+      <!-- ================= UNCONNECTED VIEW ================= -->
+      <section id="auth-screen" class="screen active">
+        <!-- Auth Header -->
+        <div class="screen-header">
+          <h2>Connect to Last.fm</h2>
+          <p>Login to your Last.fm account directly or configure custom API credentials.</p>
+        </div>
+
+        <!-- Auth Method Selector (Tabs) -->
+        <div class="auth-method-selector">
+          <button id="method-direct-btn" class="method-btn active">Direct Login</button>
+          <button id="method-web-btn" class="method-btn">Web Redirect</button>
+        </div>
+
+        <!-- Method A: Direct Password Login -->
+        <div id="direct-auth-form" class="auth-method-pane active">
+          <div class="form-group">
+            <label for="lfm-username-input">Last.fm Username / Email</label>
+            <input type="text" id="lfm-username-input" placeholder="Enter username or email" autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="lfm-password-input">Last.fm Password</label>
+            <input type="password" id="lfm-password-input" placeholder="Enter your password" autocomplete="current-password">
+          </div>
+          <button id="direct-login-btn" class="primary-btn">Log In Directly</button>
+          <p class="auth-disclaimer">Your credentials are sent securely to Last.fm and are never saved. Only a session key is stored locally.</p>
+        </div>
+
+        <!-- Method B: Web Redirect OAuth Login -->
+        <div id="web-auth-form" class="auth-method-pane">
+          <div class="connect-visual">
+            <div class="connect-logo-container">
+              <div class="ytm-badge"></div>
+              <div class="pulse-ring"></div>
+              <div class="lfm-badge"></div>
+            </div>
+            <p class="connect-desc">Authorize this extension via the official Last.fm website without sharing your password.</p>
+          </div>
+          <button id="web-connect-btn" class="primary-btn">Connect via Last.fm Web</button>
+        </div>
+
+        <!-- API Config Folder (Foldable) -->
+        <div class="api-folder">
+          <div class="api-folder-header" id="api-folder-toggle">
+            <span>Advanced API Key Setup (Optional)</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" class="chevron"><path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+          </div>
+          <div class="api-folder-body" id="api-folder-content">
+            <p class="api-note">By default, the extension uses a built-in API key. Provide your own key below if you wish.</p>
+            <div class="form-group">
+              <label for="api-key-input">API Key</label>
+              <input type="password" id="api-key-input" placeholder="Paste your API Key">
+            </div>
+            <div class="form-group">
+              <label for="api-secret-input">Shared Secret</label>
+              <input type="password" id="api-secret-input" placeholder="Paste your Shared Secret">
+            </div>
+            <button id="save-api-btn" class="secondary-btn">Save API Credentials</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= CONNECTED DASHBOARD ================= -->
+      
+      <!-- Tab 1: Active Player Dashboard -->
+      <section id="player-tab" class="dashboard-tab-pane">
+        <div class="player-card">
+          
+          <button id="minimize-player-btn" class="minimize-btn" title="Collapse Player" style="display: none;">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>
+          </button>
+          
+          <div class="card-content">
+            <div class="album-art-wrapper">
+              <img id="track-art" src="images/default-art.png" alt="Cover Art">
+              <div id="playing-indicator" class="playing-bars">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+            
+            <div class="track-details">
+              <h1 id="track-title" class="scrolling-text-container"><span class="text">No track playing</span></h1>
+              <p id="track-artist">Play music to start scrobbling</p>
+              <p id="track-album"></p>
+            </div>
+          </div>
+
+          <!-- Progress Bar Area -->
+          <div class="progress-container">
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar-bg"></div>
+              <div class="progress-bar-fill" id="track-progress-fill" style="width: 0%"></div>
+              <div class="progress-threshold-marker" id="scrobble-threshold-marker" title="Scrobble Threshold (50%)" style="left: 50%"></div>
+            </div>
+            <div class="time-labels">
+              <span id="time-current">0:00</span>
+              <span id="scrobble-badge" class="badge">Pending</span>
+              <span id="time-total">0:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Switch Toggle -->
+        <div class="quick-toggle-card">
+          <div class="control-row">
+            <div class="control-info">
+              <span class="control-label">Master Scrobble Toggle</span>
+              <span class="control-subtext">Toggle all scrobbling activity</span>
+            </div>
+            <label class="switch-toggle">
+              <input type="checkbox" id="master-scrobble-toggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Recent Scrobbles List -->
+        <div class="recent-scrobbles-section">
+          <h3>Recent Scrobbles</h3>
+          <div class="recent-list" id="recent-tracks-list">
+            <div class="no-scrobbles">No scrobbles recorded yet</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Per-Site Controls -->
+      <section id="sites-tab" class="dashboard-tab-pane">
+        <div class="section-title-card">
+          <h2>Website Permissions</h2>
+          <p>Enable or disable scrobbling and like-syncing for individual platforms.</p>
+        </div>
+
+        <div class="sites-list-card">
+          <!-- site 1 -->
+          <div class="site-permission-row">
+            <div class="site-identity">
+              <div class="site-icon ytm"></div>
+              <div class="site-meta">
+                <span class="site-name">YouTube Music</span>
+                <span class="site-url">music.youtube.com</span>
+              </div>
+            </div>
+            <label class="switch-toggle">
+              <input type="checkbox" id="site-ytm-toggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- site 2 -->
+          <div class="site-permission-row">
+            <div class="site-identity">
+              <div class="site-icon spotify"></div>
+              <div class="site-meta">
+                <span class="site-name">Spotify Web Player</span>
+                <span class="site-url">open.spotify.com</span>
+              </div>
+            </div>
+            <label class="switch-toggle">
+              <input type="checkbox" id="site-spotify-toggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- site 3 -->
+          <div class="site-permission-row">
+            <div class="site-identity">
+              <div class="site-icon youtube"></div>
+              <div class="site-meta">
+                <span class="site-name">YouTube Videos</span>
+                <span class="site-url">www.youtube.com</span>
+              </div>
+            </div>
+            <label class="switch-toggle">
+              <input type="checkbox" id="site-youtube-toggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Detailed Scrobble Settings & Accounts -->
+      <section id="settings-tab" class="dashboard-tab-pane">
+        <div class="settings-group">
+          <h3>Scrobbling Preferences</h3>
+          
+          <div class="settings-card">
+            <div class="settings-row">
+              <div class="control-info">
+                <span class="control-label">Submit Now Playing Status</span>
+                <span class="control-subtext">Let Last.fm know what you are currently playing</span>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" id="setting-nowplaying-toggle" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row-input">
+              <div class="control-info">
+                <span class="control-label">Minimum Track Duration</span>
+                <span class="control-subtext">Do not scrobble tracks shorter than this (seconds)</span>
+              </div>
+              <input type="number" id="setting-minduration" min="10" max="600" value="30">
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row-input select-row">
+              <div class="control-info">
+                <span class="control-label">Trigger Scrobble Point</span>
+                <span class="control-subtext">When to submit the scrobble</span>
+              </div>
+              <div class="input-select-combo">
+                <select id="setting-scrobblepoint-mode">
+                  <option value="percent">Percent Listened</option>
+                  <option value="seconds">Seconds Listened</option>
+                </select>
+                <input type="number" id="setting-scrobblepoint-val" min="1" max="600" value="50">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group" style="margin-top: 16px;">
+          <h3>Last.fm Connection</h3>
+          <div class="settings-card profile-details-card">
+            <div class="profile-meta">
+              <span class="connected-as-label">Connected User</span>
+              <span id="dashboard-profile-name" class="connected-username">...</span>
+            </div>
+            <button id="dashboard-logout-btn" class="logout-btn red-btn">Disconnect Account</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Floating Dock Navigation -->
+    <div id="tabs-header-nav" class="tabs-nav floating-dock" style="display: none;">
+      <div class="nav-indicator" id="nav-indicator"></div>
+      <button class="tab-btn active" data-target="player-tab">Player</button>
+      <button class="tab-btn" data-target="sites-tab">Sites</button>
+      <button class="tab-btn" data-target="settings-tab">Settings</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
