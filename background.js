@@ -171,12 +171,17 @@ async function getCorrectedMetadata(rawTitle, rawArtist, sourceSite) {
     console.error('Cache read error:', err);
   }
 
-  // Verify raw as-is
+  // Verify raw as-is and fetch official corrected names
   try {
-    await callLastFm('track.getInfo', { track: rawTitle, artist: rawArtist }, false);
-    const result = { title: rawTitle, artist: rawArtist };
-    await chrome.storage.local.set({ [cacheKey]: result });
-    return result;
+    const infoRes = await callLastFm('track.getInfo', { track: rawTitle, artist: rawArtist, autocorrect: 1 }, false);
+    if (infoRes && infoRes.track) {
+      const result = {
+        title: infoRes.track.name || rawTitle,
+        artist: infoRes.track.artist?.name || rawArtist
+      };
+      await chrome.storage.local.set({ [cacheKey]: result });
+      return result;
+    }
   } catch (err) {
     // raw track not found, proceed to clean and search
     console.log(`Scrobby: "${rawTitle}" by ${rawArtist} not found as-is. Cleaning and searching...`);
@@ -306,12 +311,31 @@ async function handlePlayerState(data) {
       broadcastState();
     }
   } else {
-    // Accumulate played duration if song was not paused
-    if (!currentSong.paused) {
-      if (currentSong.lastUpdate) {
-        const delta = (Date.now() - currentSong.lastUpdate) / 1000;
-        if (delta > 0 && delta < 5) {
-          currentSong.accumulatedTime += delta;
+    // Detect loop/repeat: if the current time jumps backward significantly (e.g. by more than 10 seconds)
+    // and we had played at least some portion of the song (e.g. past 15 seconds)
+    const isRepeated = (data.currentTime < currentSong.currentTime - 10) && (currentSong.currentTime > 15);
+    
+    if (isRepeated) {
+      console.log(`Scrobby: Repeat detected for "${currentSong.title}" by ${currentSong.artist}`);
+      currentSong.accumulatedTime = 0;
+      currentSong.scrobbled = false;
+      currentSong.nowPlayingSent = false;
+      currentSong.startTimestamp = Math.floor(Date.now() / 1000);
+      currentSong.currentTime = data.currentTime;
+      currentSong.lastUpdate = data.paused ? null : Date.now();
+      
+      if (!currentSong.paused) {
+        updateNowPlaying(currentSong);
+        currentSong.nowPlayingSent = true;
+      }
+    } else {
+      // Accumulate played duration if song was not paused
+      if (!currentSong.paused) {
+        if (currentSong.lastUpdate) {
+          const delta = (Date.now() - currentSong.lastUpdate) / 1000;
+          if (delta > 0 && delta < 5) {
+            currentSong.accumulatedTime += delta;
+          }
         }
       }
     }
