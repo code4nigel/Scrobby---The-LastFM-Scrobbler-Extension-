@@ -262,10 +262,24 @@ async function scrobbleTrack(song) {
   }
 }
 
+// Global debug logger
+async function debugLog(msg) {
+  console.log(msg);
+  try {
+    const res = await chrome.storage.local.get(['scrobby_logs']);
+    let logs = res.scrobby_logs || [];
+    logs.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
+    if (logs.length > 50) logs.shift();
+    await chrome.storage.local.set({ scrobby_logs: logs });
+  } catch (e) {}
+}
+
 // Handles incoming player states from YTM/Spotify/YouTube content script
 async function handlePlayerState(data) {
   // Execute correction pipeline on song change
   const isNewSong = currentSong.title !== data.title || currentSong.artist !== data.artist;
+
+  await debugLog(`Rcv: title="${data.title}", artist="${data.artist}", time=${data.currentTime.toFixed(1)}, isNewSong=${isNewSong}, scrobbled=${currentSong.scrobbled}, accum=${currentSong.accumulatedTime.toFixed(1)}`);
 
   if (isNewSong) {
     // 1. Accumulate residual played time of previous song
@@ -311,12 +325,14 @@ async function handlePlayerState(data) {
       broadcastState();
     }
   } else {
-    // Detect loop/repeat: if the current time jumps backward significantly (e.g. by more than 10 seconds)
-    // and we had played at least some portion of the song (e.g. past 15 seconds)
-    const isRepeated = (data.currentTime < currentSong.currentTime - 10) && (currentSong.currentTime > 15);
+    // Detect loop/repeat:
+    // 1. If the song was already scrobbled and the playhead is back at the start (under 10 seconds)
+    // 2. Or if the time jumps backward significantly (by more than 10 seconds) after playing some portion (past 15 seconds)
+    const isRepeated = (currentSong.scrobbled && data.currentTime < 10) || 
+                       (data.currentTime < currentSong.currentTime - 10 && currentSong.currentTime > 15);
     
     if (isRepeated) {
-      console.log(`Scrobby: Repeat detected for "${currentSong.title}" by ${currentSong.artist}`);
+      await debugLog(`REPEAT TRIGGERED: title="${currentSong.title}", prevTime=${currentSong.currentTime.toFixed(1)}, newTime=${data.currentTime.toFixed(1)}, scrobbledWas=${currentSong.scrobbled}`);
       currentSong.accumulatedTime = 0;
       currentSong.scrobbled = false;
       currentSong.nowPlayingSent = false;
@@ -382,6 +398,7 @@ async function handlePlayerState(data) {
 
     if (currentSong.accumulatedTime >= targetThreshold) {
       currentSong.scrobbled = true;
+      await debugLog(`SCROBBLE TRIGGERED: accumTime=${currentSong.accumulatedTime.toFixed(1)}, threshold=${targetThreshold.toFixed(1)}`);
       await scrobbleTrack(currentSong);
     }
   }

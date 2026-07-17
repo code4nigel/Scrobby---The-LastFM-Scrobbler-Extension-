@@ -306,6 +306,17 @@
               <p class="fact-intro">💡 Click here for a Nigel Fact!</p>
               <p class="fact-text" id="dev-fact-text">Did you know? Nigel makes extensions that actually work.</p>
             </div>
+
+            <!-- Easter Egg Debug Console -->
+            <div class="dev-logs-container" id="dev-logs-panel" style="display: none; margin-top: 12px; font-family: monospace; font-size: 9px; color: #a1a1b3; text-align: left; max-height: 100px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; border: 1px solid var(--border-light); width: 100%; box-sizing: border-box;">
+              <div style="font-weight: bold; margin-bottom: 4px; color: var(--lfm-red); display: flex; justify-content: space-between; align-items: center;">
+                <span>SYSTEM LOGS:</span>
+                <span id="clear-logs-btn" style="cursor: pointer; text-decoration: underline; font-size: 8px;">Clear</span>
+              </div>
+              <div id="dev-logs-content" style="white-space: pre-wrap; line-height: 1.3;"></div>
+            </div>
+          </div>
+        </div>
           </div>
         </div>
       </section>

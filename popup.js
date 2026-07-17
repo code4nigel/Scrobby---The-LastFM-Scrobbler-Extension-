@@ -788,4 +788,34 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 150);
     });
   }
+
+  // --- Developer Profile Easter Egg Debug Console ---
+  const devName = document.querySelector('.dev-name');
+  const devLogsPanel = document.getElementById('dev-logs-panel');
+  const devLogsContent = document.getElementById('dev-logs-content');
+  const clearLogsBtn = document.getElementById('clear-logs-btn');
+
+  if (devName && devLogsPanel) {
+    devName.addEventListener('dblclick', async () => {
+      const isHidden = devLogsPanel.style.display === 'none';
+      if (isHidden) {
+        devLogsPanel.style.display = 'block';
+        // Load logs
+        const res = await chrome.storage.local.get(['scrobby_logs']);
+        const logs = res.scrobby_logs || [];
+        devLogsContent.textContent = logs.length > 0 ? logs.join('\n') : 'No system logs recorded yet.';
+        devLogsPanel.scrollTop = devLogsPanel.scrollHeight;
+      } else {
+        devLogsPanel.style.display = 'none';
+      }
+    });
+  }
+
+  if (clearLogsBtn && devLogsContent) {
+    clearLogsBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await chrome.storage.local.set({ scrobby_logs: [] });
+      devLogsContent.textContent = 'Logs cleared.';
+    });
+  }
 });
