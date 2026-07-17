@@ -24,8 +24,17 @@ let currentSong = {
   scrobbled: false,
   nowPlayingSent: false,
   startTimestamp: 0,
-  sourceSite: ''
+  sourceSite: '',
+  shuffle: false,
+  repeat: 'none',
+  trackUrl: '',
+  tags: [],
+  wiki: '',
+  artistBio: ''
 };
+
+// Active music player tab ID for forwarding media control commands
+let activeTabId = null;
 
 // Update extension icon badge depending on authentication status
 async function updateBadge() {
@@ -177,8 +186,23 @@ async function getCorrectedMetadata(rawTitle, rawArtist, sourceSite) {
     if (infoRes && infoRes.track) {
       const result = {
         title: infoRes.track.name || rawTitle,
-        artist: infoRes.track.artist?.name || rawArtist
+        artist: infoRes.track.artist?.name || rawArtist,
+        album: infoRes.track.album?.title || '',
+        tags: infoRes.track.toptags?.tag?.slice(0, 5).map(t => t.name) || [],
+        wiki: infoRes.track.wiki?.summary || ''
       };
+
+      // Fetch artist bio asynchronously
+      let artistBio = '';
+      try {
+        const artistRes = await callLastFm('artist.getInfo', { artist: result.artist, autocorrect: 1 }, false);
+        artistBio = artistRes?.artist?.bio?.summary || '';
+        artistBio = artistBio.replace(/<a href[\s\S]*$/i, '').trim();
+      } catch (e) {
+        console.warn('Scrobby: Failed to fetch artist bio:', e);
+      }
+      result.artistBio = artistBio;
+
       await chrome.storage.local.set({ [cacheKey]: result });
       return result;
     }
@@ -196,10 +220,35 @@ async function getCorrectedMetadata(rawTitle, rawArtist, sourceSite) {
     if (matches && matches.length > 0) {
       const topMatch = matches[0];
       if (isMatchValid(rawTitle, rawArtist, topMatch.name, topMatch.artist)) {
-        const result = { title: topMatch.name, artist: topMatch.artist };
-        console.log(`Scrobby: Snapped match to "${result.title}" by ${result.artist}`);
-        await chrome.storage.local.set({ [cacheKey]: result });
-        return result;
+        // Fetch full track info for this match
+        try {
+          const infoRes = await callLastFm('track.getInfo', { track: topMatch.name, artist: topMatch.artist, autocorrect: 1 }, false);
+          if (infoRes && infoRes.track) {
+            const result = {
+              title: infoRes.track.name || topMatch.name,
+              artist: infoRes.track.artist?.name || topMatch.artist,
+              album: infoRes.track.album?.title || '',
+              tags: infoRes.track.toptags?.tag?.slice(0, 5).map(t => t.name) || [],
+              wiki: infoRes.track.wiki?.summary || ''
+            };
+
+            // Fetch artist bio
+            let artistBio = '';
+            try {
+              const artistRes = await callLastFm('artist.getInfo', { artist: result.artist, autocorrect: 1 }, false);
+              artistBio = artistRes?.artist?.bio?.summary || '';
+              artistBio = artistBio.replace(/<a href[\s\S]*$/i, '').trim();
+            } catch (e) {}
+            result.artistBio = artistBio;
+
+            await chrome.storage.local.set({ [cacheKey]: result });
+            return result;
+          }
+        } catch (e) {
+          const result = { title: topMatch.name, artist: topMatch.artist, album: '', tags: [], wiki: '', artistBio: '' };
+          await chrome.storage.local.set({ [cacheKey]: result });
+          return result;
+        }
       }
     }
   } catch (err) {
@@ -207,8 +256,9 @@ async function getCorrectedMetadata(rawTitle, rawArtist, sourceSite) {
   }
 
   // Fallback to cleaned metadata if search fails or yields no valid match
-  await chrome.storage.local.set({ [cacheKey]: cleaned });
-  return cleaned;
+  const fallback = { ...cleaned, album: '', tags: [], wiki: '', artistBio: '' };
+  await chrome.storage.local.set({ [cacheKey]: fallback });
+  return fallback;
 }
 
 // Update Now Playing status on Last.fm
@@ -252,7 +302,8 @@ async function scrobbleTrack(song) {
       artist: song.artist,
       album: song.album || '',
       timestamp: song.startTimestamp,
-      artwork: song.artwork
+      artwork: song.artwork,
+      trackUrl: song.trackUrl || ''
     }, ...recent].slice(0, 20);
     await chrome.storage.local.set({ recent_scrobbles: recent });
     
@@ -274,12 +325,58 @@ async function debugLog(msg) {
   } catch (e) {}
 }
 
+// Preprocess metadata based on user preferences
+function preprocessMetadata(title, artist, settings) {
+  let cleanTitle = title;
+  let cleanArtist = artist;
+
+  // 1. Primary Artist Extraction
+  if (settings.primary_artist_only) {
+    const splitRegex = /\s*(?:,|\bfeat\.?|\bft\.?|&|\band\b|\bvs\.?)\s+/i;
+    cleanArtist = cleanArtist.split(splitRegex)[0].trim();
+  }
+
+  // 2. Clean Remaster / Deluxe / Live Noise
+  if (settings.clean_remasters) {
+    const remasterRegex = /\s*[-–(]\s*\d*(?:st|nd|rd|th)?\s*(?:anniversary|remastered|remaster|live|bonus|deluxe|expanded|mono|stereo|re-recorded|edit|club|mix)[^)]*\)?/gi;
+    cleanTitle = cleanTitle.replace(remasterRegex, '').trim();
+    cleanTitle = cleanTitle.replace(/\s*[-–]\s*$/g, '').trim();
+  }
+
+  // 3. Custom Regex Replacements
+  if (settings.custom_regex_rules && settings.custom_regex_rules.length > 0) {
+    for (const rule of settings.custom_regex_rules) {
+      if (!rule.find) continue;
+      try {
+        const regex = new RegExp(rule.find, 'gi');
+        cleanTitle = cleanTitle.replace(regex, rule.replace || '');
+        cleanArtist = cleanArtist.replace(regex, rule.replace || '');
+      } catch (e) {
+        console.warn('Invalid custom regex rule:', rule, e);
+      }
+    }
+  }
+
+  return { title: cleanTitle, artist: cleanArtist };
+}
+
 // Handles incoming player states from YTM/Spotify/YouTube content script
 async function handlePlayerState(data) {
-  // Execute correction pipeline on song change
-  const isNewSong = currentSong.title !== data.title || currentSong.artist !== data.artist;
+  // Load pre-processing settings
+  const settings = await chrome.storage.local.get([
+    'primary_artist_only',
+    'clean_remasters',
+    'custom_regex_rules'
+  ]);
+  
+  const preprocessed = preprocessMetadata(data.title, data.artist, settings);
+  const processedTitle = preprocessed.title;
+  const processedArtist = preprocessed.artist;
 
-  await debugLog(`Rcv: title="${data.title}", artist="${data.artist}", time=${data.currentTime.toFixed(1)}, isNewSong=${isNewSong}, scrobbled=${currentSong.scrobbled}, accum=${currentSong.accumulatedTime.toFixed(1)}`);
+  // Execute correction pipeline on song change
+  const isNewSong = currentSong.title !== processedTitle || currentSong.artist !== processedArtist;
+
+  await debugLog(`Rcv: title="${processedTitle}", artist="${processedArtist}", time=${data.currentTime.toFixed(1)}, isNewSong=${isNewSong}, scrobbled=${currentSong.scrobbled}, accum=${currentSong.accumulatedTime.toFixed(1)}`);
 
   if (isNewSong) {
     // 1. Accumulate residual played time of previous song
@@ -292,8 +389,8 @@ async function handlePlayerState(data) {
 
     // 2. Initialize new song details (placeholder until correction finishes)
     currentSong = {
-      title: data.title,
-      artist: data.artist,
+      title: processedTitle,
+      artist: processedArtist,
       album: data.album || '',
       duration: data.duration || 0,
       currentTime: data.currentTime || 0,
@@ -304,19 +401,29 @@ async function handlePlayerState(data) {
       scrobbled: false,
       nowPlayingSent: false,
       startTimestamp: Math.floor(Date.now() / 1000),
-      sourceSite: data.sourceSite || ''
+      sourceSite: data.sourceSite || '',
+      shuffle: data.shuffle || false,
+      repeat: data.repeat || 'none',
+      trackUrl: data.trackUrl || '',
+      tags: [],
+      wiki: '',
+      artistBio: ''
     };
 
     // Broadcast the raw state first for instant UI response
     broadcastState();
 
     // 3. Resolve metadata corrections asynchronously
-    const corrected = await getCorrectedMetadata(data.title, data.artist, data.sourceSite);
+    const corrected = await getCorrectedMetadata(processedTitle, processedArtist, data.sourceSite);
     
     // Ensure the track hasn't changed since lookup began
-    if (currentSong.startTimestamp === Math.floor(Date.now() / 1000) || currentSong.title === data.title) {
+    if (currentSong.startTimestamp === Math.floor(Date.now() / 1000) || currentSong.title === processedTitle) {
       currentSong.title = corrected.title;
       currentSong.artist = corrected.artist;
+      currentSong.album = corrected.album || currentSong.album;
+      currentSong.tags = corrected.tags || [];
+      currentSong.wiki = corrected.wiki || '';
+      currentSong.artistBio = corrected.artistBio || '';
       
       if (!currentSong.paused) {
         updateNowPlaying(currentSong);
@@ -362,6 +469,9 @@ async function handlePlayerState(data) {
     currentSong.duration = data.duration;
     currentSong.artwork = data.artwork || currentSong.artwork;
     currentSong.album = data.album || currentSong.album;
+    currentSong.shuffle = data.shuffle || false;
+    currentSong.repeat = data.repeat || 'none';
+    currentSong.trackUrl = data.trackUrl || currentSong.trackUrl;
     currentSong.lastUpdate = data.paused ? null : Date.now();
 
     // Trigger now playing if un-paused and not sent yet
@@ -424,8 +534,33 @@ async function syncLovedTrack(love) {
 // Listen for message events from popups or content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'PLAYER_STATE') {
+    if (sender.tab) {
+      activeTabId = sender.tab.id;
+    }
     handlePlayerState(message.data);
     sendResponse({ success: true });
+  } else if (message.type === 'SEND_CONTROL_COMMAND') {
+    if (activeTabId) {
+      chrome.tabs.sendMessage(activeTabId, { type: 'MEDIA_CONTROL', command: message.command })
+        .then(() => sendResponse({ success: true }))
+        .catch(err => sendResponse({ success: false, error: err.message }));
+      return true; // Keep channel open for async response
+    } else {
+      sendResponse({ success: false, error: 'No active music tab found.' });
+    }
+  } else if (message.type === 'TRIGGER_REPLAY') {
+    if (activeTabId) {
+      if (message.trackUrl) {
+        chrome.tabs.update(activeTabId, { url: message.trackUrl })
+          .then(() => sendResponse({ success: true }))
+          .catch(err => sendResponse({ success: false, error: err.message }));
+        return true; // Keep channel open for async response
+      } else {
+        sendResponse({ success: false, error: 'No track URL recorded.' });
+      }
+    } else {
+      sendResponse({ success: false, error: 'No active music tab found.' });
+    }
   } else if (message.type === 'GET_STATE') {
     sendResponse(currentSong);
   } else if (message.type === 'LOVE_TRACK') {
@@ -471,6 +606,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   } else if (message.type === 'REFRESH_BADGE') {
     updateBadge().then(() => sendResponse({ success: true }));
+    return true;
+  } else if (message.type === 'CALL_API') {
+    const { method, params } = message;
+    callLastFm(method, params, false)
+      .then(res => sendResponse({ success: true, data: res }))
+      .catch(err => sendResponse({ success: false, error: err.message }));
     return true;
   }
 });

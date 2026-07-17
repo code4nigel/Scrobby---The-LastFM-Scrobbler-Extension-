@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Scrobby - Last.fm Scrobbler",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A beautiful, premium scrobbler for YouTube Music, Spotify, and YouTube that syncs your listening history to Last.fm.",
   "permissions": [
     "storage"

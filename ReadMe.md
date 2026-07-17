@@ -12,26 +12,29 @@ It features a stunning glassmorphic dark interface, fluid liquid tab transitions
 
 ## 📸 Interface Screenshots
 
-Here are the real screenshots of **Scrobby** in action, showcasing its glassmorphic dark theme and layouts:
+Here are the interface screenshots of **Scrobby** in action, showcasing its glassmorphic dark theme and layouts:
 
-| Immersive Fullscreen | Fullscreen Player (Centered) | Mini Player View |
+| Immersive Mode (Mouse Active) | Immersive Mode (Idle Screensaver) | Fullscreen Player (Layout 1) | Fullscreen Player (Layout 2) |
+|:---:|:---:|:---:|:---:|
+| <img src="UI/SS_immersivemode_arrowOnScreen.png" width="165" /> | <img src="UI/SS_immersivemode_away.png" width="165" /> | <img src="UI/SS_normal_player.png" width="165" /> | <img src="UI/SS_normal_player_2.png" width="165" /> |
+
+| Mini Player View | Site Permissions Settings | Scrobbling Preferences / Settings |
 |:---:|:---:|:---:|
-| <img src="UI/Player_immersivefullscreen.png" width="220" /> | <img src="UI/Player_fullscreennormal.png" width="220" /> | <img src="UI/MiniPlayer.png" width="220" /> |
+| <img src="UI/SS_miniplayer.png" width="220" /> | <img src="UI/SS_sitesTab.png" width="220" /> | <img src="UI/SS_settings.png" width="220" /> |
 
-| Site Permissions Settings | Scrobbling Preferences | Mini Player Scrobbles List |
-|:---:|:---:|:---:|
-| <img src="UI/Site_settings.png" width="220" /> | <img src="UI/Overall_settings.png" width="220" /> | <img src="UI/MiniPlayer_scrobbleList.png" width="220" /> |
-
+| Local Listening Charts | Recent Scrobbles List |
+|:---:|:---:|
+| <img src="UI/SS_chartTab.png" width="220" /> | <img src="UI/Player_recentScrobble.png" width="220" /> |
 
 ---
 
 ## 🎥 Visual Demonstrations
 
-Here is a side-by-side comparison demonstrating the difference between the standard centered player layout and the new fluid immersive background layout:
+Here is a side-by-side comparison of the high-fidelity demonstration screens (centered player layouts vs. the active/idle states of the fluid immersive background player):
 
-| Fullscreen Player (Centered Layout) | Fullscreen Player (Immersive Layout) |
-|:---:|:---:|
-| <img src="UI/demo_fullscreen_normal.png" width="340" /> | <img src="UI/demo_fullscreen_immersive_demonstration.png" width="340" /> |
+| Centered Player (Demo 1) | Centered Player (Demo 2) | Immersive Player (Active Mouse) | Immersive Player (Idle Screensaver) |
+|:---:|:---:|:---:|:---:|
+| <img src="UI/demo_normal.png" width="165" /> | <img src="UI/demo_normal_2.png" width="165" /> | <img src="UI/demo_immersive_mouseOnScreen.png" width="165" /> | <img src="UI/demo_immersive_away.png" width="165" /> |
 
 ---
 
@@ -41,7 +44,15 @@ Here is a side-by-side comparison demonstrating the difference between the stand
     *   **YouTube Music** (`music.youtube.com`)
     *   **Spotify Web Player** (`open.spotify.com`)
     *   **YouTube Videos** (`www.youtube.com`)
-*   **Zero-Configuration Credentials**: Scrobby comes pre-loaded with built-in default Last.fm API keys (secured with Base64 obfuscation to prevent scanner detection). You can log in directly without setting up anything!
+*   **Zero-Configuration Credentials**: Scrobby comes pre-loaded with built-in default Last.fm API keys (secured with Base64 obfuscation to prevent scanner detection). Log in directly without setting up developer keys!
+*   **Universal Media Controls**: Play, Pause, Skip Next, Skip Previous, Shuffle, and Repeat your music on Spotify, YouTube Music, and YouTube directly from the extension interface!
+*   **Active Shuffle & Repeat Indicators**: 
+    *   **Shuffle**: Glows in signature Last.fm Red when active.
+    *   **Repeat Playlist**: Glows in Spotify Green when repeat-all is enabled.
+    *   **Repeat Track**: Glows in Last.fm Red with a tiny, bold circular **"1" badge** in the corner.
+*   **Recent Scrobbles Replay Button**: Click the counter-clockwise replay arrow next to any scrobbled track to instantly load and replay that exact track in your active music player tab.
+*   **Scroll-based Mode Switcher**: Scroll up/down on the player card to switch smoothly between **Mini Player (Collapsed)** ➔ **Normal Expanded Card** ➔ **Immersive Mode** (with built-in scroll delta threshold filtering to prevent accidental triggers).
+*   **Hover-Out Idle Screensaver Mode**: When your mouse leaves the popup window in Immersive Mode, the track metadata and controls slide out and fade away completely, leaving a clean, beautiful view of the cover art with just the progress bar at the bottom.
 *   **Stunning Immersive Player Mode**: 
     *   Fills the background of the expanded player with sharp cover art.
     *   Applies a soft bottom-up dark gradient overlay to keep text and controls completely readable.
@@ -59,23 +70,33 @@ Here is a side-by-side comparison demonstrating the difference between the stand
 *   **Per-Site Permissions**: Toggle scrobbling on/off dynamically site-by-site.
 *   **Master Scrobble Switch**: A global pause button to temporarily stop all scrobbling activity.
 *   **Fluid Liquid Animations**: Glassmorphic dashboard tabs slide, stretch, and fade smoothly using hardware-accelerated transitions.
-*   **Developer Profile panel**: Includes a card dedicated to NigelWeb with a floating circular avatar, flowing music emojis, and an interactive "💡 Click here for a Nigel Fact!" bubble that cycles funny developer facts on click.
+*   **Developer Profile Panel**: Includes a card dedicated to NigelWeb with a floating circular avatar, flowing music emojis, and an interactive "💡 Click here for a Nigel Fact!" bubble that cycles funny developer facts on click.
 
 ---
 
-## 🚀 Installation Guide
+## 🚀 Easy Installation Guide (via GitHub)
 
 Since this is a custom unpacked extension, you can install it manually in less than 1 minute:
 
-1.  **Download or clone** this repository to a folder on your computer.
-2.  Open your browser and navigate to the Extensions page:
+### Method A: Download Repository Zip (Easiest)
+1. Click the green **Code** button at the top of this repository and select **Download ZIP** (or download the packaged extension `.zip` from our Releases page).
+2. Extract the downloaded `.zip` file into a folder on your computer.
+
+### Method B: Git Clone
+1. Clone the repository directly to your machine:
+   ```bash
+   git clone https://github.com/code4nigel/Scrobby---The-LastFM-Scrobbler-Extension-.git
+   ```
+
+### Loading Unpacked Into Your Browser
+1. Open your browser and navigate to the Extensions page:
     *   **Chrome**: `chrome://extensions`
     *   **Brave**: `brave://extensions`
     *   **Edge**: `edge://extensions`
-3.  Turn **ON** **Developer mode** (toggle in the top-right corner).
-4.  Click the **Load unpacked** button (top-left corner).
-5.  Select the folder containing this extension (the folder containing `manifest.json`).
-6.  Pin **Scrobby** to your toolbar for quick access!
+2. Turn **ON** **Developer mode** (toggle in the top-right corner).
+3. Click the **Load unpacked** button (top-left corner).
+4. Select the extracted folder containing this extension (the folder containing `manifest.json`).
+5. Pin **Scrobby** to your toolbar for quick access!
 
 ---
 

@@ -113,6 +113,26 @@
             </div>
           </div>
 
+          <!-- Player Playback Controls -->
+          <div class="player-controls-bar">
+            <button id="ctrl-shuffle" class="ctrl-btn" title="Shuffle">
+              <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M10.59 9.17L5.41 4L4 5.41l5.17 5.17l1.42-1.41zM14.5 4l2.04 2.04L4 18.59L5.41 20L17.96 7.46L20 9.5V4h-5.5zm.33 9.41l-1.41 1.41l3.13 3.13L14.5 20H20v-5.5l-2.04 2.04l-3.13-3.13z"/></svg>
+            </button>
+            <button id="ctrl-prev" class="ctrl-btn" title="Previous Song">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            </button>
+            <button id="ctrl-play-pause" class="ctrl-btn main-play-btn" title="Play / Pause">
+              <svg class="icon-play" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+              <svg class="icon-pause" viewBox="0 0 24 24" width="20" height="20" style="display: none;"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <button id="ctrl-next" class="ctrl-btn" title="Next Song">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6 18l8.5-6L6 6v12zM16 6v12h2V6z"/></svg>
+            </button>
+            <button id="ctrl-repeat" class="ctrl-btn" title="Repeat Mode">
+              <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M7 7h10v3l4-4l-4-4v3H5v6h2V7zm10 10H7v-3l-4 4l4 4v-3h12v-6h-2v4z"/></svg>
+            </button>
+          </div>
+
           <!-- Progress Bar Area -->
           <div class="progress-container">
             <div class="progress-bar-wrapper">
@@ -124,6 +144,44 @@
               <span id="time-current">0:00</span>
               <span id="scrobble-badge" class="badge">Pending</span>
               <span id="time-total">0:00</span>
+            </div>
+
+            <button id="track-info-toggle-btn" class="track-info-toggle-btn" title="View Song & Artist Info">
+              <svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M11 9h2V7h-2v2zm1 11c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-18C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v-6h-2v6z"/></svg>
+            </button>
+          </div>
+
+          <!-- Sliding Info Panel -->
+          <div class="player-info-panel" id="player-info-panel">
+            <!-- Pull-down handle bar & close helper text -->
+            <div class="info-panel-handle-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center; padding: 10px 0 6px 0; position: absolute; top: 0; left: 0; z-index: 25; pointer-events: none;">
+              <div class="info-panel-handle" style="width: 36px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.2); margin-bottom: 4px;"></div>
+              <span class="info-panel-swipe-tip" style="font-size: 8px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500;">Scroll down to close</span>
+            </div>
+            
+            <button id="close-info-panel-btn" class="close-info-panel-btn" title="Close Panel">
+              <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+            
+            <div class="info-panel-header" style="display: none;">
+              <h3>Song & Artist Details</h3>
+            </div>
+            
+            <div class="info-panel-body">
+              <div class="info-section">
+                <span class="info-section-label">Album</span>
+                <p id="info-album-val" class="info-section-text">Loading album...</p>
+              </div>
+              
+              <div class="info-section">
+                <span class="info-section-label">Popular Tags</span>
+                <div id="info-tags-list" class="info-tags-container"></div>
+              </div>
+              
+              <div class="info-section" style="border-bottom: none; padding-bottom: 0;">
+                <span class="info-section-label">Biography & Info</span>
+                <div class="info-scrollable-wiki" id="info-wiki-val">Loading biography...</div>
+              </div>
             </div>
           </div>
         </div>
@@ -147,6 +205,76 @@
           <h3>Recent Scrobbles</h3>
           <div class="recent-list" id="recent-tracks-list">
             <div class="no-scrobbles">No scrobbles recorded yet</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: Charts Dashboard -->
+      <section id="charts-tab" class="dashboard-tab-pane">
+        <div class="section-title-card" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2 style="margin: 0;">Listening Insights</h2>
+            <p style="margin: 2px 0 0 0; font-size: 11px;">Your personal scrobble trends and favorites.</p>
+          </div>
+          
+          <!-- Period Selector -->
+          <div class="period-selector" style="display: flex; gap: 4px; background: rgba(0,0,0,0.2); padding: 2px; border-radius: 20px; border: 1px solid var(--border-light);">
+            <button class="period-btn" data-period="1day" style="font-size: 9px; padding: 3px 6px; border-radius: 12px; border: none; background: transparent; color: var(--text-sub); cursor: pointer; transition: all 0.2s ease; outline: none;">1D</button>
+            <button class="period-btn active" data-period="7day" style="font-size: 9px; padding: 3px 6px; border-radius: 12px; border: none; background: transparent; color: var(--text-sub); cursor: pointer; transition: all 0.2s ease; outline: none;">7D</button>
+            <button class="period-btn" data-period="1month" style="font-size: 9px; padding: 3px 6px; border-radius: 12px; border: none; background: transparent; color: var(--text-sub); cursor: pointer; transition: all 0.2s ease; outline: none;">30D</button>
+            <button class="period-btn" data-period="3month" style="font-size: 9px; padding: 3px 6px; border-radius: 12px; border: none; background: transparent; color: var(--text-sub); cursor: pointer; transition: all 0.2s ease; outline: none;">90D</button>
+            <button class="period-btn" data-period="overall" style="font-size: 9px; padding: 3px 6px; border-radius: 12px; border: none; background: transparent; color: var(--text-sub); cursor: pointer; transition: all 0.2s ease; outline: none;">All</button>
+          </div>
+        </div>
+
+        <div class="charts-scrollable-container" style="display: flex; flex-direction: column; gap: 12px; max-height: 360px; overflow-y: auto; padding-right: 4px;">
+          <!-- Metrics Row -->
+          <div class="charts-metrics-row" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%;">
+            <div class="metric-card" style="padding: 8px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; text-align: center;">
+              <span class="metric-label" style="font-size: 9px; text-transform: uppercase; color: var(--text-sub);">Scrobbles</span>
+              <p class="metric-val" id="metric-total-scrobbles" style="font-size: 15px; font-weight: bold; margin: 2px 0 0 0; color: var(--text-main);">-</p>
+            </div>
+            <div class="metric-card" style="padding: 8px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; text-align: center;">
+              <span class="metric-label" style="font-size: 9px; text-transform: uppercase; color: var(--text-sub);">Artists</span>
+              <p class="metric-val" id="metric-total-artists" style="font-size: 15px; font-weight: bold; margin: 2px 0 0 0; color: var(--text-main);">-</p>
+            </div>
+            <div class="metric-card" style="padding: 8px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; text-align: center;">
+              <span class="metric-label" style="font-size: 8px; text-transform: uppercase; color: var(--text-sub); letter-spacing: 0.02em;">Scrobbles / Day</span>
+              <p class="metric-val" id="metric-daily-average" style="font-size: 15px; font-weight: bold; margin: 2px 0 0 0; color: var(--text-main);">-</p>
+            </div>
+          </div>
+
+          <!-- Custom SVG Bar Chart -->
+          <div class="charts-section-card" style="padding: 10px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <span class="charts-card-title" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--lfm-red); letter-spacing: 0.05em;">Scrobble Count Trend</span>
+            <div id="trend-chart-wrapper" style="width: 100%; height: 90px; position: relative;">
+              <svg id="trend-svg-chart" width="100%" height="100%" viewBox="0 0 320 90" preserveAspectRatio="none" style="overflow: visible;">
+                <!-- SVG elements dynamically generated -->
+              </svg>
+            </div>
+          </div>
+
+          <!-- Top Artists / Tracks Tabs -->
+          <div class="charts-section-card" style="padding: 10px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div class="charts-card-tabs" style="display: flex; gap: 12px; border-bottom: 1px solid var(--border-light); padding-bottom: 4px;">
+              <span id="tab-top-artists-btn" class="charts-tab-btn active" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-sub); letter-spacing: 0.05em; cursor: pointer; transition: color 0.2s ease; padding-bottom: 4px; border-bottom: 2px solid transparent;">Top Artists</span>
+              <span id="tab-top-tracks-btn" class="charts-tab-btn" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-sub); letter-spacing: 0.05em; cursor: pointer; transition: color 0.2s ease; padding-bottom: 4px; border-bottom: 2px solid transparent;">Top Tracks</span>
+            </div>
+            
+            <div class="charts-tab-content active" id="pane-top-artists" style="display: flex; flex-direction: column; gap: 6px;">
+              <!-- Dynamically populated top artists list -->
+            </div>
+            <div class="charts-tab-content" id="pane-top-tracks" style="display: none; flex-direction: column; gap: 6px;">
+              <!-- Dynamically populated top tracks list -->
+            </div>
+          </div>
+
+          <!-- Tag Cloud Card -->
+          <div class="charts-section-card" style="padding: 10px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;">
+            <span class="charts-card-title" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--lfm-red); letter-spacing: 0.05em;">Popular Genres</span>
+            <div class="charts-tag-cloud" id="charts-tag-cloud" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; padding: 6px; width: 100%;">
+              <!-- Dynamically generated tags -->
+            </div>
           </div>
         </div>
       </section>
@@ -261,6 +389,114 @@
                 <input type="number" id="setting-scrobblepoint-val" min="1" max="600" value="50">
               </div>
             </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row-input" style="display: flex; flex-direction: column; gap: 8px; align-items: stretch; width: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div class="control-info">
+                  <span class="control-label">Info Panel Opacity</span>
+                  <span class="control-subtext">Adjust the transparency of the biography panel overlay</span>
+                </div>
+                <span id="info-opacity-val" style="font-size: 11px; font-weight: 600; color: var(--lfm-red);">72%</span>
+              </div>
+              <input type="range" id="setting-info-opacity" min="15" max="95" value="72" style="width: 100%; height: 4px; accent-color: var(--lfm-red); background: var(--border-light); border-radius: 2px; cursor: pointer; outline: none; -webkit-appearance: none;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Metadata Tweaks Section -->
+        <div class="settings-group" style="margin-top: 16px;">
+          <h3>Metadata Rules & Tweaks</h3>
+          <div class="settings-card">
+            <!-- Extract First Artist -->
+            <div class="settings-row">
+              <div class="control-info">
+                <span class="control-label">Primary Artist Only</span>
+                <span class="control-subtext">Scrobble only the first performer in collaborations</span>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" id="setting-primary-artist">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div class="settings-divider"></div>
+            
+            <!-- Clean Remasters -->
+            <div class="settings-row">
+              <div class="control-info">
+                <span class="control-label">Clean Remasters & Live Tags</span>
+                <span class="control-subtext">Strip "Remastered", "Live At...", and deluxe noise</span>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" id="setting-clean-remasters" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div class="settings-divider"></div>
+            
+            <!-- Custom Regex Editor -->
+            <div class="settings-column">
+              <span class="control-label" style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;">Custom Regex Replacements</span>
+              <span class="control-subtext" style="margin-bottom: 8px;">Define custom find & replace patterns</span>
+              
+              <div class="regex-rules-list" id="regex-rules-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 80px; overflow-y: auto; margin-bottom: 8px; padding-right: 4px;">
+                <!-- Dynamically loaded rule pills -->
+              </div>
+              
+              <div class="regex-rule-inputs" style="display: flex; gap: 6px; align-items: center;">
+                <input type="text" id="regex-find-input" placeholder="Find (regex)" style="flex: 1; font-size: 11px; padding: 6px 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-main); outline: none;">
+                <input type="text" id="regex-replace-input" placeholder="Replace" style="width: 70px; font-size: 11px; padding: 6px 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-light); color: var(--text-main); outline: none;">
+                <button id="add-regex-btn" style="background: var(--lfm-red); color: white; border: none; border-radius: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; font-size: 14px; outline: none; transition: transform 0.2s ease;">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gestures & Shortcuts Section -->
+        <div class="settings-group" style="margin-top: 16px;">
+          <h3>Gestures & Shortcuts</h3>
+          <div class="settings-card" style="padding: 12px 16px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              
+              <!-- Player Gestures -->
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <span class="control-label" style="font-size: 11px; font-weight: 700; color: var(--lfm-red); text-transform: uppercase; letter-spacing: 0.05em;">Active Player Controls</span>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 4px; margin-top: 2px;">
+                  <span style="color: var(--text-main); font-weight: 500;">Scroll / Swipe Down</span>
+                  <span style="color: var(--text-sub); font-family: monospace; background: rgba(255,255,255,0.04); padding: 1px 4px; border-radius: 4px;">Mini → Normal → Immersive</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 4px; margin-top: 2px;">
+                  <span style="color: var(--text-main); font-weight: 500;">Scroll / Swipe Up</span>
+                  <span style="color: var(--text-sub); font-family: monospace; background: rgba(255,255,255,0.04); padding: 1px 4px; border-radius: 4px;">Immersive → Normal → Mini</span>
+                </div>
+              </div>
+
+              <!-- Biography Sheet Gestures -->
+              <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                <span class="control-label" style="font-size: 11px; font-weight: 700; color: var(--lfm-red); text-transform: uppercase; letter-spacing: 0.05em;">Biography Overlay Sheet</span>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 4px; margin-top: 2px;">
+                  <span style="color: var(--text-main); font-weight: 500;">Click "i" Info Button</span>
+                  <span style="color: var(--text-sub); font-family: monospace; background: rgba(255,255,255,0.04); padding: 1px 4px; border-radius: 4px;">Open Biography Panel</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 4px; margin-top: 2px;">
+                  <span style="color: var(--text-main); font-weight: 500;">Scroll Up (when at top of bio)</span>
+                  <span style="color: var(--text-sub); font-family: monospace; background: rgba(255,255,255,0.04); padding: 1px 4px; border-radius: 4px;">Close Biography Panel</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 4px; margin-top: 2px;">
+                  <span style="color: var(--text-main); font-weight: 500;">Scroll anywhere outside bio text</span>
+                  <span style="color: var(--text-sub); font-family: monospace; background: rgba(255,255,255,0.04); padding: 1px 4px; border-radius: 4px;">Close Biography Panel</span>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
 
@@ -327,6 +563,7 @@
     <div id="tabs-header-nav" class="tabs-nav floating-dock" style="display: none;">
       <div class="nav-indicator" id="nav-indicator"></div>
       <button class="tab-btn active" data-target="player-tab">Player</button>
+      <button class="tab-btn" data-target="charts-tab">Charts</button>
       <button class="tab-btn" data-target="sites-tab">Sites</button>
       <button class="tab-btn" data-target="settings-tab">Settings</button>
     </div>

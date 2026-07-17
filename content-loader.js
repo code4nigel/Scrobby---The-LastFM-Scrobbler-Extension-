@@ -248,6 +248,62 @@ function getActiveMediaElement() {
   return document.querySelector('video') || document.querySelector('audio');
 }
 
+// Extract Shuffle and Repeat states from the active site player bar
+function getShuffleRepeatState() {
+  const hostname = window.location.hostname;
+  let shuffle = false;
+  let repeat = 'none'; // 'none' | 'all' (playlist) | 'one' (track)
+  
+  try {
+    if (hostname === 'music.youtube.com') {
+      const shuffleBtn = document.querySelector('ytmusic-player-bar .shuffle, ytmusic-player-bar [title*="Shuffle"]');
+      if (shuffleBtn) {
+        shuffle = shuffleBtn.getAttribute('aria-pressed') === 'true' || 
+                  shuffleBtn.hasAttribute('active') || 
+                  shuffleBtn.classList.contains('active') ||
+                  (shuffleBtn.getAttribute('aria-label') || '').toLowerCase().includes('disable');
+      }
+      
+      const repeatBtn = document.querySelector('ytmusic-player-bar .repeat, ytmusic-player-bar [title*="Repeat"]');
+      if (repeatBtn) {
+        const title = (repeatBtn.getAttribute('title') || '').toLowerCase();
+        const ariaLabel = (repeatBtn.getAttribute('aria-label') || '').toLowerCase();
+        if (title.includes('one') || title.includes('track') || ariaLabel.includes('one')) {
+          repeat = 'one';
+        } else if (title.includes('all') || title.includes('list') || ariaLabel.includes('all')) {
+          repeat = 'all';
+        } else {
+          repeat = 'none';
+        }
+      }
+    } 
+    else if (hostname === 'open.spotify.com') {
+      const shuffleBtn = document.querySelector('[data-testid="control-button-shuffle"]');
+      if (shuffleBtn) {
+        shuffle = shuffleBtn.getAttribute('aria-checked') === 'true' || 
+                  shuffleBtn.classList.contains('control-button--active') ||
+                  (shuffleBtn.getAttribute('aria-label') || '').toLowerCase().includes('disable');
+      }
+      
+      const repeatBtn = document.querySelector('[data-testid="control-button-repeat"]');
+      if (repeatBtn) {
+        const checked = repeatBtn.getAttribute('aria-checked'); // "true" (one) | "mixed" (all) | "false" (none)
+        if (checked === 'true') {
+          repeat = 'one';
+        } else if (checked === 'mixed') {
+          repeat = 'all';
+        } else {
+          repeat = 'none';
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Scrobby: Error reading shuffle/repeat state:', e);
+  }
+  
+  return { shuffle, repeat };
+}
+
 // Send playback state updates to the background service worker
 function sendPlayerState() {
   if (!isSiteEnabled) return;
@@ -259,6 +315,8 @@ function sendPlayerState() {
     return;
   }
 
+  const shuffleRepeat = getShuffleRepeatState();
+
   const state = {
     title: metadata.title,
     artist: metadata.artist || 'Unknown Artist',
@@ -269,6 +327,9 @@ function sendPlayerState() {
     paused: media.paused,
     playbackRate: media.playbackRate,
     sourceSite: window.location.hostname,
+    shuffle: shuffleRepeat.shuffle,
+    repeat: shuffleRepeat.repeat,
+    trackUrl: window.location.href,
     timestamp: Date.now()
   };
 
@@ -277,6 +338,8 @@ function sendPlayerState() {
       lastSentState.title === state.title &&
       lastSentState.artist === state.artist &&
       lastSentState.paused === state.paused &&
+      lastSentState.shuffle === state.shuffle &&
+      lastSentState.repeat === state.repeat &&
       Math.abs(lastSentState.currentTime - state.currentTime) < 1.0 &&
       lastSentState.duration === state.duration) {
     return;
@@ -356,6 +419,68 @@ document.addEventListener('click', (event) => {
     } else if (ariaLabel.includes('Remove from Your Library') || ariaLabel.includes('Remove from Liked Songs')) {
       chrome.runtime.sendMessage({ type: 'LOVE_TRACK', love: false });
     }
+  }
+});
+
+// Listen for player control messages from the background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'MEDIA_CONTROL') {
+    const command = message.command;
+    const media = getActiveMediaElement();
+    const hostname = window.location.hostname;
+    
+    try {
+      if (command === 'play') {
+        if (media) media.play().catch(() => {});
+      } else if (command === 'pause') {
+        if (media) media.pause();
+      } else if (command === 'toggle') {
+        if (media) {
+          if (media.paused) media.play().catch(() => {});
+          else media.pause();
+        }
+      } else if (command === 'next') {
+        if (hostname === 'music.youtube.com') {
+          const btn = document.querySelector('ytmusic-player-bar .next-button, ytmusic-player-bar [title="Next song"], ytmusic-player-bar .next-button button');
+          if (btn) btn.click();
+        } else if (hostname === 'open.spotify.com') {
+          const btn = document.querySelector('[data-testid="control-button-skip-forward"]');
+          if (btn) btn.click();
+        } else if (hostname === 'www.youtube.com') {
+          const btn = document.querySelector('.ytp-next-button');
+          if (btn) btn.click();
+        }
+      } else if (command === 'previous') {
+        if (hostname === 'music.youtube.com') {
+          const btn = document.querySelector('ytmusic-player-bar .previous-button, ytmusic-player-bar [title="Previous song"], ytmusic-player-bar .previous-button button');
+          if (btn) btn.click();
+        } else if (hostname === 'open.spotify.com') {
+          const btn = document.querySelector('[data-testid="control-button-skip-back"]');
+          if (btn) btn.click();
+        }
+      } else if (command === 'shuffle') {
+        if (hostname === 'music.youtube.com') {
+          const btn = document.querySelector('ytmusic-player-bar .shuffle, ytmusic-player-bar [title="Shuffle"]');
+          if (btn) btn.click();
+        } else if (hostname === 'open.spotify.com') {
+          const btn = document.querySelector('[data-testid="control-button-shuffle"]');
+          if (btn) btn.click();
+        }
+      } else if (command === 'repeat') {
+        if (hostname === 'music.youtube.com') {
+          const btn = document.querySelector('ytmusic-player-bar .repeat, ytmusic-player-bar [title*="Repeat"]');
+          if (btn) btn.click();
+        } else if (hostname === 'open.spotify.com') {
+          const btn = document.querySelector('[data-testid="control-button-repeat"]');
+          if (btn) btn.click();
+        }
+      }
+      sendResponse({ success: true });
+    } catch (e) {
+      console.error('Scrobby: Control execution failed:', e);
+      sendResponse({ success: false, error: e.message });
+    }
+    return true;
   }
 });
 

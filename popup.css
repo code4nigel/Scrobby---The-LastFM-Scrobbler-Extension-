@@ -472,7 +472,7 @@ body {
 
 /* Active Player Screen CSS */
 .player-card {
-  background: var(--bg-card);
+  background: #0d0d12; /* Solid dark background for mini-player to avoid cover art bleeding */
   border: 1px solid var(--border-light);
   border-radius: 14px;
   position: relative;
@@ -865,9 +865,9 @@ input:checked + .slider:before {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 20px;
-  margin-bottom: 24px;
-  margin-top: 16px;
+  gap: 12px;
+  margin-bottom: 10px;
+  margin-top: 8px;
   width: 100%;
   position: relative;
   transition: margin-top 0.4s cubic-bezier(0.25, 1, 0.5, 1);
@@ -875,8 +875,8 @@ input:checked + .slider:before {
 
 .player-card.expanded .album-art-wrapper {
   position: relative;
-  width: 170px;
-  height: 170px;
+  width: 140px;
+  height: 140px;
   border-radius: 12px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
   z-index: 1;
@@ -1329,7 +1329,7 @@ input:checked + .slider:before {
   flex-shrink: 0;
 }
 
-.lfm-link-btn {
+.lfm-link-btn, .recent-replay-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1342,16 +1342,24 @@ input:checked + .slider:before {
   text-decoration: none;
   transition: all 0.2s ease;
   cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
+  outline: none;
 }
 
-.lfm-link-btn:hover {
+.lfm-link-btn:hover, .recent-replay-btn:hover {
   background: var(--lfm-red);
   color: #fff;
   border-color: transparent;
   box-shadow: 0 0 8px var(--lfm-red-glow);
+  transform: scale(1.08);
 }
 
-.lfm-link-btn svg {
+.lfm-link-btn:active, .recent-replay-btn:active {
+  transform: scale(0.92);
+}
+
+.lfm-link-btn svg, .recent-replay-btn svg {
   display: block;
 }
 
@@ -1438,16 +1446,38 @@ input:checked + .slider:before {
   left: 0;
   width: 100%;
   height: 100%;
-  /* Softer bottom gradient fade to let the artwork be visible in the upper-middle region and only dark at the timeline/badge */
-  background: linear-gradient(to bottom, rgba(8, 8, 12, 0) 0%, rgba(8, 8, 12, 0) 45%, rgba(8, 8, 12, 0.6) 75%, rgba(8, 8, 12, 0.95) 100%);
+  /* Stronger bottom gradient fade to guarantee readable white text on bright album artwork backgrounds */
+  background: linear-gradient(to bottom, rgba(8, 8, 12, 0.05) 0%, rgba(8, 8, 12, 0.35) 40%, rgba(8, 8, 12, 0.75) 72%, rgba(8, 8, 12, 0.98) 100%);
   z-index: 1;
   pointer-events: none;
+}
+
+/* Immersive mode larger, bolder text layouts for readability overlayed on artwork */
+.player-card.immersive-art #track-title span {
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65), 0 1px 3px rgba(0, 0, 0, 0.45) !important;
+}
+
+.player-card.immersive-art #track-artist {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.player-card.immersive-art #track-album {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Pull text details margin up slightly in immersive mode to keep layout centered */
 .player-card.expanded.immersive-art .card-content {
   position: static; /* Let absolute album-art-wrapper resolve relative to player-card */
-  margin-top: 180px; /* Push the text down to align beautifully */
+  margin-top: 120px; /* Push the text down to align beautifully */
 }
 
 .player-card.expanded.immersive-art .track-details {
@@ -1455,6 +1485,23 @@ input:checked + .slider:before {
   width: 100%;
   text-align: center;
   z-index: 2;
+}
+
+/* Clamps title to max 2 lines with normal wrapping instead of scrolling marquee */
+.player-card.expanded.immersive-art #track-title {
+  white-space: normal !important;
+  overflow: visible !important;
+}
+
+.player-card.expanded.immersive-art #track-title .text {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal !important;
+  animation: none !important;
+  transform: none !important;
+  overflow: hidden;
+  line-height: 1.25;
 }
 
 .player-card.expanded.immersive-art .progress-container {
@@ -1631,4 +1678,588 @@ input:checked + .slider:before {
   line-height: 1.4;
   margin: 0;
   transition: all 0.25s ease;
+}
+
+/* Track Info Toggle Button */
+.track-info-toggle-btn {
+  position: absolute;
+  top: 12px;
+  right: 40px; /* Positioned to the left of the immersive art toggle btn */
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
+  color: var(--text-sub);
+  display: none; /* Controlled by .player-card.expanded */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.player-card.expanded .progress-container {
+  width: 100%;
+  margin-top: 12px;
+  position: relative; /* Set as coordinates reference context for absolute children */
+}
+
+/* Track Info Toggle Button */
+.track-info-toggle-btn {
+  position: absolute;
+  top: -30px; /* Positioned directly above the progress slider */
+  right: 0px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
+  color: var(--text-sub);
+  display: none; /* Controlled by .player-card.expanded */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.player-card.expanded .track-info-toggle-btn {
+  display: flex;
+}
+
+.track-info-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--text-main);
+  transform: scale(1.08);
+}
+
+/* Sliding Info Panel Overlay */
+.player-info-panel {
+  position: absolute;
+  top: 0; /* Align to the top of the player card */
+  left: 0;
+  width: 100%;
+  height: calc(100% + 115px); /* Stretch down to cover the hidden sections */
+  background: rgba(14, 14, 22, var(--info-panel-opacity, 0.72));
+  backdrop-filter: blur(25px) saturate(1.2);
+  -webkit-backdrop-filter: blur(25px) saturate(1.2);
+  border-radius: 16px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.player-card.show-info .player-info-panel {
+  transform: translateY(0);
+}
+
+/* Hide other controls when info sheet is open to prevent overlap */
+.player-card.show-info .minimize-btn,
+.player-card.show-info .immersive-toggle-btn,
+.player-card.show-info .track-info-toggle-btn {
+  display: none !important;
+}
+
+.info-panel-header {
+  display: none !important; /* Completely hide header to prevent title text clutter */
+}
+
+.close-info-panel-btn {
+  position: absolute;
+  top: 24px; /* Align to the top right of the sliding sheet */
+  right: 20px;
+  bottom: auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
+  color: var(--text-sub);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  transition: all 0.2s ease;
+}
+
+.close-info-panel-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(1.08);
+}
+
+.info-panel-body {
+  flex: 1;
+  padding: 100px 16px 260px 16px; /* 260px bottom padding allows scrolling past the end to bring biography text to the center of the screen */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Custom info panel elements */
+
+.info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 12px;
+}
+
+.info-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--lfm-red);
+  letter-spacing: 0.05em;
+}
+
+.info-section-text {
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.info-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.info-tag-pill {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
+  color: var(--text-sub);
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.info-tag-pill:hover {
+  background: rgba(213, 16, 7, 0.1);
+  border-color: var(--lfm-red);
+  color: var(--text-main);
+  box-shadow: 0 0 6px var(--border-glow);
+}
+
+.info-scrollable-wiki {
+  font-size: 12px;
+  color: var(--text-sub);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Custom Regex Rules Editor */
+.settings-column {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  width: 100%;
+}
+
+.regex-rule-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.regex-rule-item:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rule-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+}
+
+.rule-meta .find-val {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.rule-meta .rule-arrow {
+  color: var(--lfm-red);
+  font-weight: bold;
+}
+
+.rule-meta .replace-val {
+  color: #a1a1b3;
+  font-style: italic;
+}
+
+.delete-regex-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-sub);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.delete-regex-btn:hover {
+  color: var(--lfm-red);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Period Selector Styles */
+.period-selector .period-btn.active {
+  background: var(--lfm-red) !important;
+  color: var(--text-main) !important;
+  box-shadow: 0 0 6px var(--lfm-red-glow);
+}
+
+.period-selector .period-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+/* Charts Tab Buttons */
+.charts-tab-btn.active {
+  color: var(--lfm-red) !important;
+  border-color: var(--lfm-red) !important;
+}
+
+.charts-tab-btn:hover:not(.active) {
+  color: var(--text-main) !important;
+}
+
+/* Charts Row Items */
+.charts-row-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.charts-row-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.charts-row-item .item-rank {
+  font-weight: bold;
+  color: var(--lfm-red);
+  margin-right: 8px;
+  width: 14px;
+  display: inline-block;
+  font-family: monospace;
+}
+
+.charts-row-item .item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.charts-row-item .item-name {
+  color: var(--text-main);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.charts-row-item .item-subname {
+  font-size: 9px;
+  color: var(--text-sub);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.charts-row-item .item-count {
+  font-size: 11px;
+  color: var(--text-main);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.charts-row-item .item-trend {
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  font-family: monospace;
+}
+
+.charts-row-item .trend-up {
+  color: var(--green);
+}
+
+.charts-row-item .trend-down {
+  color: var(--lfm-red);
+}
+
+.charts-row-item .trend-neutral {
+  color: var(--text-sub);
+}
+
+/* Scrollable Container Scrollbar */
+.charts-scrollable-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.charts-scrollable-container::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 10px;
+}
+
+/* SVG Chart Bars Smooth Glide Transitions */
+#trend-svg-chart rect {
+  transition: x 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+              y 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+              width 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+              height 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+              rx 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+              ry 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Immersive Mode Light Background Adaptations */
+.player-card.expanded.immersive-art.light-bg {
+  background: rgba(255, 255, 255, 0.45); /* Lighter backdrop overlay on bright art */
+}
+
+/* Keep header buttons dark translucent and white icons for contrast on bright art */
+.player-card.expanded.immersive-art.light-bg .minimize-btn,
+.player-card.expanded.immersive-art.light-bg .immersive-toggle-btn,
+.player-card.expanded.immersive-art.light-bg .track-info-toggle-btn {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+}
+
+.player-card.expanded.immersive-art.light-bg .minimize-btn:hover,
+.player-card.expanded.immersive-art.light-bg .immersive-toggle-btn:hover,
+.player-card.expanded.immersive-art.light-bg .track-info-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.55) !important;
+  color: #fff !important;
+}
+
+/* Hide sibling dashboard sections when the info panel is active */
+.player-card.show-info ~ .recent-scrobbles-section,
+.player-card.show-info ~ .quick-toggle-card {
+  display: none !important;
+}
+
+/* Time labels & scrobble badge in light immersive mode */
+.player-card.expanded.immersive-art.light-bg .progress-bar-bg {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.player-card.expanded.immersive-art.light-bg .playing-bars span {
+  background: #111;
+}
+
+/* Mouse Hover-Out Idle Screensaver Mode in Immersive Player */
+
+/* Transition definitions to make text/controls fade smoothly */
+.player-card.expanded.immersive-art .track-details,
+.player-card.expanded.immersive-art .minimize-btn,
+.player-card.expanded.immersive-art .immersive-toggle-btn,
+.player-card.expanded.immersive-art .track-info-toggle-btn,
+.player-card.expanded.immersive-art .album-art-wrapper::after {
+  transition: opacity 0.75s cubic-bezier(0.25, 1, 0.5, 1),
+              transform 0.75s cubic-bezier(0.25, 1, 0.5, 1),
+              filter 0.75s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Fade text to fully invisible state and nudge slightly */
+.app-container:not(:hover) .player-card.expanded.immersive-art .track-details {
+  opacity: 0 !important;
+  pointer-events: none;
+  transform: translateY(6px);
+}
+
+/* Fully hide top navigation and timeline-info buttons */
+.app-container:not(:hover) .player-card.expanded.immersive-art .minimize-btn,
+.app-container:not(:hover) .player-card.expanded.immersive-art .immersive-toggle-btn,
+.app-container:not(:hover) .player-card.expanded.immersive-art .track-info-toggle-btn {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+}
+
+/* Dim the dark linear gradient overlay to 20% to reveal the full background art clearly */
+.app-container:not(:hover) .player-card.expanded.immersive-art .album-art-wrapper::after {
+  opacity: 0.2;
+}
+
+/* Playback Control Bar Styles */
+.player-controls-bar {
+  display: none; /* Hidden in collapsed mini-player */
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 12px;
+  margin-bottom: 10px;
+  width: 100%;
+  z-index: 5;
+}
+
+.player-card.expanded .player-controls-bar {
+  display: flex;
+}
+
+.ctrl-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-light);
+  color: var(--text-sub);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  outline: none;
+  padding: 0;
+}
+
+.ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-main);
+  transform: scale(1.1);
+}
+
+.ctrl-btn:active {
+  transform: scale(0.92);
+}
+
+#ctrl-shuffle, #ctrl-repeat {
+  width: 30px;
+  height: 30px;
+}
+
+#ctrl-prev, #ctrl-next {
+  width: 38px;
+  height: 38px;
+}
+
+.main-play-btn {
+  width: 48px;
+  height: 48px;
+  background: var(--lfm-red);
+  border: none;
+  color: white;
+  box-shadow: 0 6px 16px var(--lfm-red-glow);
+}
+
+.main-play-btn:hover {
+  background: #f0140b;
+  color: white;
+  box-shadow: 0 8px 20px rgba(213, 16, 7, 0.6);
+  transform: scale(1.12);
+}
+
+/* Adaptations for Light Background in Immersive Mode */
+.player-card.expanded.immersive-art.light-bg .ctrl-btn {
+  background: rgba(0, 0, 0, 0.07);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #333;
+}
+
+.player-card.expanded.immersive-art.light-bg .ctrl-btn:hover {
+  background: rgba(0, 0, 0, 0.15);
+  color: #000;
+}
+
+.player-card.expanded.immersive-art.light-bg .main-play-btn {
+  background: var(--lfm-red);
+  color: white;
+  border: none;
+  box-shadow: 0 6px 16px var(--lfm-red-glow);
+}
+
+/* Screensaver Mode Hover-Out Transition for Controls Bar */
+.player-card.expanded.immersive-art .player-controls-bar {
+  transition: opacity 0.75s cubic-bezier(0.25, 1, 0.5, 1),
+              transform 0.75s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.app-container:not(:hover) .player-card.expanded.immersive-art .player-controls-bar {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+}
+
+/* Active playback control button indicators */
+.ctrl-btn.active {
+  color: var(--lfm-red) !important;
+  background: rgba(213, 16, 7, 0.12) !important;
+  border-color: rgba(213, 16, 7, 0.25) !important;
+  box-shadow: 0 0 10px rgba(213, 16, 7, 0.25);
+}
+
+.ctrl-btn.active-all {
+  color: #10b981 !important; /* Green glow for repeat all playlist */
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+}
+
+.ctrl-btn.active-one {
+  color: var(--lfm-red) !important; /* Red glow for repeat single track */
+  background: rgba(213, 16, 7, 0.12) !important;
+  border-color: rgba(213, 16, 7, 0.25) !important;
+  box-shadow: 0 0 10px rgba(213, 16, 7, 0.35);
+  position: relative;
+}
+
+/* Small "1" badge for repeat single */
+.ctrl-btn.active-one::after {
+  content: '1';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 7px;
+  font-weight: 800;
+  background: var(--lfm-red);
+  color: white;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 4px rgba(213, 16, 7, 0.5);
 }
