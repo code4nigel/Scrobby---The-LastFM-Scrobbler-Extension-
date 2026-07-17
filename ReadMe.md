@@ -122,3 +122,17 @@ Since this is a custom unpacked extension, you can install it manually in less t
 *   **Media Session API Interceptor**: Injects into the page `MAIN` world to intercept media metadata streams directly.
 *   **CSS Mask Scroll Fading**: Blurs out overflowing horizontal pills for a clean scroll boundary.
 *   **Base64 Obfuscation**: Shields default keys from automated crawler search engines.
+
+---
+
+## 🙋 Needing Help & Testing Status
+
+> [!IMPORTANT]
+> **Active Testing Status**:
+> * **YouTube Music (`music.youtube.com`)**: Fully tested, validated, and actively used. All features (media controls, loved tracks, scrobbling, seek, shuffle/repeat indicators) are guaranteed to work smoothly.
+> * **Spotify Web Player (`open.spotify.com`) & YouTube Videos (`www.youtube.com`)**: These sites are configured and fully integrated into our tracking logic, but they have **not been tested directly** in everyday scenarios. You may encounter bugs, layout quirks, or missing controls on these platforms.
+
+If you encounter any issues, bugs, or have suggestions for improvements:
+1. Open an issue on our [GitHub Issues](https://github.com/code4nigel/Scrobby---The-LastFM-Scrobbler-Extension-/issues) page.
+2. Provide details about your browser, which music site you were using, and any console error logs (right-click popup -> Inspect -> Console).
+3. Pull Requests are highly welcome if you'd like to help test and fix issues on Spotify or YouTube!
