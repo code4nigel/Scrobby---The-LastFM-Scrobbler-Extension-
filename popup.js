@@ -1284,11 +1284,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Developer Profile Interactive Facts ---
   const devFacts = [
     "Nigel scrobbles music so much that Last.fm thought he was a server rack.",
-    "Legend says Nigel wrote Scrobby in a single sitting powered entirely by pure caffeine and lo-fi beats.",
-    "Nigel once synced his liked songs so fast he bypassed the speed of light.",
-    "Nigel's favorite music genre is 'whatever makes the compiler compile faster'.",
-    "When Nigel goes full screen player mode, the universe actually expands by 3 pixels.",
-    "Nigel speaks fluent JavaScript, CSS, and sarcasm."
+    "Legend says Nigel wrote Scrobby in a single sitting powered entirely by pure caffeine and random YTM beats.",
+    "Nigel's favorite music genre is 'whatever he likes at the moment'. It's hard to pick a favorite, but he is always down for some NEFFEX.",
+    "Nigel stubbed his toe working on this project late at night because he got hungry, went to get a snack, and... BAM."
   ];
 
   const devFactBubble = document.getElementById('dev-fact-bubble');
