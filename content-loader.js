@@ -474,6 +474,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           const btn = document.querySelector('[data-testid="control-button-repeat"]');
           if (btn) btn.click();
         }
+      } else if (command === 'seek') {
+        if (media && typeof message.value === 'number') {
+          media.currentTime = message.value;
+        }
       }
       sendResponse({ success: true });
     } catch (e) {

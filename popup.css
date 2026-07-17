@@ -635,6 +635,12 @@ body {
   position: relative;
   height: 4px;
   border-radius: 2px;
+  cursor: pointer;
+  transition: height 0.2s ease;
+}
+
+.progress-bar-wrapper:hover {
+  height: 6px;
 }
 
 .progress-bar-bg {

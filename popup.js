@@ -70,6 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const playerCard = document.querySelector('.player-card');
   const masterScrobbleToggle = document.getElementById('master-scrobble-toggle');
   const recentTracksList = document.getElementById('recent-tracks-list');
+  const progressBarWrapper = document.querySelector('.progress-bar-wrapper');
+  let currentTrackDuration = 0;
+  let isScrubbing = false;
 
   // Site Permissions switches
   const siteSwitches = {
@@ -733,11 +736,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Timers & Progress
     const duration = song.duration || 0;
-    const current = song.currentTime || 0;
-    const progressPercent = duration > 0 ? (current / duration) * 100 : 0;
+    currentTrackDuration = duration;
 
-    progressFill.style.width = `${progressPercent}%`;
-    timeCurrent.textContent = formatTime(current);
+    if (!isScrubbing) {
+      const current = song.currentTime || 0;
+      const progressPercent = duration > 0 ? (current / duration) * 100 : 0;
+      progressFill.style.width = `${progressPercent}%`;
+      timeCurrent.textContent = formatTime(current);
+    }
     timeTotal.textContent = formatTime(duration);
 
     // Scrobble Badge status
@@ -1116,8 +1122,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const ctrlNext = document.getElementById('ctrl-next');
   const ctrlRepeat = document.getElementById('ctrl-repeat');
 
-  const sendMediaCommand = (command) => {
-    chrome.runtime.sendMessage({ type: 'SEND_CONTROL_COMMAND', command });
+  const sendMediaCommand = (command, value = null) => {
+    chrome.runtime.sendMessage({ type: 'SEND_CONTROL_COMMAND', command, value });
   };
 
   if (ctrlShuffle) {
@@ -1148,6 +1154,46 @@ document.addEventListener('DOMContentLoaded', () => {
     ctrlRepeat.addEventListener('click', (e) => {
       e.stopPropagation();
       sendMediaCommand('repeat');
+    });
+  }
+
+  // Handle dragging / seeking scrubbing on progress timeline bar
+  if (progressBarWrapper) {
+    const handleScrub = (clientX) => {
+      if (currentTrackDuration <= 0) return 0;
+      const rect = progressBarWrapper.getBoundingClientRect();
+      const clickX = clientX - rect.left;
+      const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+      
+      // Update UI immediately for drag feedback
+      progressFill.style.width = `${percentage * 100}%`;
+      timeCurrent.textContent = formatTime(percentage * currentTrackDuration);
+      
+      return percentage * currentTrackDuration;
+    };
+
+    progressBarWrapper.addEventListener('mousedown', (e) => {
+      if (currentTrackDuration <= 0) return;
+      isScrubbing = true;
+      const targetTime = handleScrub(e.clientX);
+      
+      const onMouseMove = (moveEvent) => {
+        handleScrub(moveEvent.clientX);
+      };
+      
+      const onMouseUp = (upEvent) => {
+        isScrubbing = false;
+        const finalTime = handleScrub(upEvent.clientX);
+        
+        // Broadcast seek control command
+        sendMediaCommand('seek', finalTime);
+        
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+      
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
     });
   }
 

@@ -541,7 +541,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true });
   } else if (message.type === 'SEND_CONTROL_COMMAND') {
     if (activeTabId) {
-      chrome.tabs.sendMessage(activeTabId, { type: 'MEDIA_CONTROL', command: message.command })
+      chrome.tabs.sendMessage(activeTabId, { type: 'MEDIA_CONTROL', command: message.command, value: message.value })
         .then(() => sendResponse({ success: true }))
         .catch(err => sendResponse({ success: false, error: err.message }));
       return true; // Keep channel open for async response
